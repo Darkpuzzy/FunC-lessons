@@ -1,5 +1,3 @@
-;; Simple wallet smart contract
-
 () recv_internal(slice in_msg) impure {
     throw_if(35,in_msg.slice_bits() < 32);
     int n = in_msg~load_uint(32);

@@ -3,22 +3,21 @@
 [int, tuple, cell, tuple, int] based_test_data() method_id(0) {
     int function_selector = 0; ;; call recv_internal()
 
-    cell message = begin_cell() ;; writen message int 10 => 32-bit
-                    .load_uint(10, 32)
-                    .end_cell();
+    ;; writen message int 10 => 32-bit
+    cell message = begin_cell()     
+            .store_uint(10, 32)         
+            .end_cell();
 
     tuple stack = unsafe_tuple([message.begin_parse()]); ;; message go to slice ( bit number ) -> unsafe_tuple([])
 
-    cell data = begin_cell()
-                    .store_uint(0, 64)
-                    .end_cell();
+    cell data = begin_cell().store_uint(0, 64).end_cell();
 
     return [function_selector, stack, data, get_c7(), null()]; ;; get_c7 added status NOW in c7 and gas_limit = null()
 }
 
 ;; TEST TON FUNCTIONS 
 
-_ based_test(int exit_code, cell data, tuple stack, cell actions, gas int) method_id(1) {
+_ based_test(int exit_code, cell data, tuple stack, cell actions, int gas) method_id(1) {
     throw_if(100, exit_code != 0);
 
     var ds = data.begin_parse(); ;; writen data message in variable ds
@@ -31,6 +30,41 @@ _ based_test(int exit_code, cell data, tuple stack, cell actions, gas int) metho
 ;; TEST GET DATA FUNCTIONS
 
 [int, tuple, cell, tuple, int] get_test_data() method_id(2) {
-    int get_fun_id = 128253; ;; id functions get_total in contract.fif
+    int function_selector = 128253; ;; id functions get_total in contract.fif
+
+    tuple stack = unsafe_tuple([]);
+
+    cell data = begin_cell().store_uint(10, 64).end_cell();
+
+    return [function_selector, stack, data, get_c7(), null()];
 }
 
+;; TEST GET FUNCTIONS
+
+_ get_test(int exit_code, cell data, tuple stack, cell actions, int gas) method_id(3) {
+	throw_if(103, exit_code != 0);
+
+	int counter = first(stack); 
+
+	throw_if(104, counter != 10); 
+}
+
+;; TEST EXCEPTIONS DATA
+
+[int, tuple, cell, tuple, int] test_exception_data() method_id(4) {
+	int function_selector = 0;
+
+	cell message = begin_cell().store_uint(30, 31).end_cell();
+
+	tuple stack = unsafe_tuple([message.begin_parse()]);
+
+	cell data = begin_cell().store_uint(0, 64).end_cell();
+
+	return [function_selector, stack, data, get_c7(), null()];
+}
+
+;; TEST EXCEPTIONS FUNCTIONS
+
+_ test_exception(int exit_code, cell data, tuple stack, cell actions, int gas) method_id(5) {
+	throw_if(100, exit_code == 0);
+}
