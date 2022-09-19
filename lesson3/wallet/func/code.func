@@ -1,0 +1,40 @@
+int equal_slices (slice a, slice b) asm "SDEQ";
+
+;; Parse method 
+
+slice load_data() inline {
+    var ld = get_data().begin_parse();
+    return ld~load_msg_addr();
+}
+
+slice parse_senders_msg(cell in_msg_full) inline {
+    var msg = in_msg_full.begin_parse();
+    var flags = msg~load_uint(4); ;; работает как срез по индексу (?)
+    slice address = msg~load_msg_addr(); ;; Внутренний метод load_msg_addr (?)
+    return address;
+}
+
+() recv_internal(int balance, int msg_value, cell in_msg_full, slice in_msg_body) {
+    slice senders_msg = parse_senders_msg(in_msg_full); ;; записываем в переменную разбиваемый текст на куски (slice)
+    slice owner_address = load_data();
+
+    if ~ equal_slices(senders_msg, owner_address) {
+        cell msg_body_cell = begin_cell().store_slice(in_msg_body).end_cell();
+
+        var msg = begin_cell()
+		  .store_uint(0x10, 6)
+		  .store_slice(owner_address)
+		  .store_grams(0)
+		  .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+		  .store_slice(senders_msg)
+		  .store_ref(msg_body_cell)
+		  .end_cell();
+
+        send_raw_message(msg, 64);
+   }
+}
+
+() recv_external(slice in_msg) impure { 
+}
+
+
